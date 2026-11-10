@@ -1,0 +1,11 @@
+config.env
+work/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+backups/

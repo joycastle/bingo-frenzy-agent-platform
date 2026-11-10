@@ -1,0 +1,20 @@
+#!/bin/bash
+. "$(dirname "$0")/common.sh"
+case "${1:-}" in
+  install) exec bash "$BFA_ROOT/bin/install.sh" ;;
+  start|stop|status) exec python3 "$BFA_ROOT/bin/service.py" "$1" ;;
+  logs) tail -n 80 "$STATE_DIR/logs/server.log" "$STATE_DIR/logs/edge.log" ;;
+  pair) cd "$CURRENT"; exec node dist-server/openmausbot.js pair --port "$OMB_PORT" --data-dir "$OMB_DATA_DIR" --public-url "$OMB_PUBLIC_URL" ;;
+  doctor) cd "$CURRENT"; exec node dist-server/openmausbot.js doctor --url "http://127.0.0.1:$OMB_PORT" ;;
+  cli) shift; cd "$CURRENT"; exec node dist-server/openmausbot.js "$@" ;;
+  backup)
+    bash "$BFA_ROOT/bin/mausctl" stop
+    trap 'bash "$BFA_ROOT/bin/mausctl" start' EXIT
+    mkdir -p "$STATE_DIR/backups"
+    file="$STATE_DIR/backups/mausbot-$(date +%Y%m%d-%H%M%S).tar.gz"
+    tar -czf "$file" -C "$(dirname "$OMB_DATA_DIR")" "$(basename "$OMB_DATA_DIR")"
+    chmod 600 "$file"
+    printf '备份：%s\n' "$file"
+    ;;
+  *) echo 'usage: bin/mausctl install|start|stop|status|doctor|pair|logs|backup|cli' >&2; exit 2 ;;
+esac
