@@ -1,6 +1,8 @@
 import importlib.util
 import plistlib
+import subprocess
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location('bfa_service', Path(__file__).parents[1] / 'bin/service.py')
@@ -36,6 +38,24 @@ class ServiceConfigurationTests(unittest.TestCase):
         self.assertIn('reverse_proxy 127.0.0.1:8800', config)
         self.assertIn('flush_interval -1', config)
         self.assertNotIn('header_up Host', config)
+
+    def test_reload_recovers_when_previous_job_is_still_exiting(self):
+        done = subprocess.CompletedProcess(['launchctl'], 0, '', '')
+        pending = subprocess.CompletedProcess(['launchctl'], 5, '', 'Bootstrap failed: 5')
+        with patch.object(service.subprocess, 'run', side_effect=[done, pending, done]) as run, patch.object(service.time, 'sleep') as wait:
+            service.reload_agent('gui/502', 'test.agent', Path('/tmp/test.plist'))
+        self.assertEqual(run.call_args_list[0].args[0], ['launchctl', 'bootout', 'gui/502/test.agent'])
+        self.assertEqual(run.call_args_list[-1].args[0], ['launchctl', 'bootstrap', 'gui/502', '/tmp/test.plist'])
+        wait.assert_called_once_with(0.5)
+
+    def test_reload_does_not_hide_other_bootstrap_failures(self):
+        done = subprocess.CompletedProcess(['launchctl'], 0, '', '')
+        failed = subprocess.CompletedProcess(['launchctl'], 1, '', 'Operation not permitted')
+        with patch.object(service.subprocess, 'run', side_effect=[done, failed]), patch.object(service.time, 'sleep') as wait:
+            with self.assertRaises(subprocess.CalledProcessError) as error:
+                service.reload_agent('gui/502', 'test.agent', Path('/tmp/test.plist'))
+        self.assertEqual(error.exception.returncode, 1)
+        wait.assert_not_called()
 
 
 if __name__ == '__main__': unittest.main()

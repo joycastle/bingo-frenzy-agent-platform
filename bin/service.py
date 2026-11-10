@@ -49,6 +49,17 @@ def caddy_config(bind, web, server, webhook):
 '''
 
 
+def reload_agent(domain, label, target):
+    subprocess.run(['launchctl', 'bootout', f'{domain}/{label}'], capture_output=True)
+    for attempt in range(20):
+        result = subprocess.run(['launchctl', 'bootstrap', domain, str(target)], capture_output=True, text=True)
+        if result.returncode == 0: return
+        # macOS launchd can return EIO while an asynchronous bootout is finishing.
+        if result.returncode != 5 or attempt == 19:
+            raise subprocess.CalledProcessError(result.returncode, result.args, output=result.stdout, stderr=result.stderr)
+        time.sleep(0.5)
+
+
 def main():
     root = Path(os.environ['BFA_ROOT'])
     state = Path(os.environ['STATE_DIR'])
@@ -81,8 +92,7 @@ def main():
         pending.write_bytes(plistlib.dumps(plist(role, root, state, home)))
         pending.chmod(0o600)
         os.replace(pending, target)
-        subprocess.run(['launchctl', 'bootout', f'{domain}/{PREFIX}.{role}'], capture_output=True)
-        subprocess.run(['launchctl', 'bootstrap', domain, str(target)], check=True)
+        reload_agent(domain, f'{PREFIX}.{role}', target)
     error = None
     for _ in range(90):
         try:
