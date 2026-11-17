@@ -1,6 +1,6 @@
 # 代码阅读 Bot
 
-`skills/bf-code-reader/SKILL.md` 是这个 Bot 的 Skill 源码，负责仓库定位、架构导航、跨仓调用链、分支工作树和源码证据。Bot 的显示名称及 ID 在部署机器选择，不写死到通用模板。
+`skills/bf-code-reader/SKILL.md` 是这个 Bot 的 Skill 源码，负责仓库定位、架构导航、跨仓调用链、分支工作树和源码证据。`SOUL.md` 是长期指示源码，明确何时使用 Skill 和架构入口。Bot 的显示名称及 ID 在部署机器选择，不写死到通用模板。
 
 ## 维护与安装
 
@@ -18,7 +18,7 @@ python3 bin/install-bot-skills.py \
 
 安装器通过 MausBot 配置 API 安装、启用，并重新读取核对内容。它不修改 Bot 的模型、审批模式、工作目录、名称、对话或其它 Skill；目前支持单 SKILL.md，若发现支持文件会明确拒绝，避免静默漏装。
 
-更新后在 Bot 的“资料库 → 技能”核对 `bf-code-reader`。用隔离临时工作区验证新流程；不往正式历史对话写测试消息。
+在 Bot 设置的 SOUL 中填写本目录 `SOUL.md`，在“资料库 → 技能”核对 `bf-code-reader` 已开启。维护时先更新仓库源文件，再通过浏览器设置保存并核对；安装器只处理 Skill，不覆盖已有 SOUL。用隔离临时工作区验证新流程；不往正式历史对话写测试消息。
 
 ## 给这个 Bot 的资料
 

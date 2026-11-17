@@ -54,6 +54,7 @@ GitHub 接入使用 `bin/agent-github`：每次从统一文件读取，`GH_TOKEN
 bots/
 └── code-reader/
     ├── README.md
+    ├── SOUL.md
     └── skills/
         └── bf-code-reader/
             └── SKILL.md
