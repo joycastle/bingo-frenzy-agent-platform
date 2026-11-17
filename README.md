@@ -50,7 +50,7 @@ GitHub 接入使用 `bin/agent-github`：每次从统一文件读取，`GH_TOKEN
 
 ## 按 Bot 维护 Skill
 
-飞书项目 MCP 的个人只读授权、统一环境变量、单 Bot 绑定和换机命令见 [接入说明](docs/feishu-project-mcp.md)。另提供 `bash bin/feishu-project-cli` 试用官方 Meegle CLI，复用同一 Token；目前正式 Bot 仍使用 MCP。真实 Token 不入 Git。
+飞书项目 MCP 的个人只读授权、统一环境变量、单 Bot 绑定和换机命令见 [接入说明](docs/feishu-project-mcp.md)。另提供 `bash bin/feishu-project-cli` 试用官方 Meegle CLI，复用同一 Token；目前正式 Bot 仍使用 MCP。真实 Token 不入 Git。暂缓的问题及后续验收项见 [待办](docs/TODO.md)。
 
 ```text
 bots/
