@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
@@ -13,6 +14,8 @@ def main():
     p.add_argument('--url', required=True)
     p.add_argument('--bot', required=True)
     p.add_argument('--directory', required=True, type=Path)
+    p.add_argument('--replace', action='store_true', help='备份后替换本平台安装的同名 Skill')
+    p.add_argument('--backup-directory', type=Path, default=Path.home()/'.local/share/bingo-frenzy-agent-platform/skill-backups')
     args = p.parse_args()
     url = urlsplit(args.url)
     if url.scheme != 'http' or url.hostname not in ('127.0.0.1','localhost') or url.username or url.password or url.path not in ('','/') or url.query or url.fragment:
@@ -32,8 +35,30 @@ def main():
         if extras:p.error('当前单文件安装入口不能忽略支持文件，请使用完整 Skill 包安装')
     for file in skills:
         text=file.read_text();name=file.parent.name
-        api('POST',f'/api/bots/{args.bot}/skill-template',{'name':name,'description':'','source':'local-platform:'+name,'text':text,'enabled':True})
-        saved=api('GET',f'/api/bots/{args.bot}/skills/{name}')['text']
+        path=f'/api/bots/{args.bot}/skills/{name}'
+        listing=api('GET',f'/api/bots/{args.bot}/skills')['skills']
+        existing=next((s for s in listing if s['name']==name),None)
+        source='local-platform:'+name
+        previous=api('GET',path)['text'] if existing else None
+        if existing and previous==text:
+            if not existing['enabled']:api('PATCH',path,{'enabled':True})
+        else:
+            old=None
+            if existing:
+                if not args.replace:p.error('同名 Skill 已存在；更新请使用 --replace，先备份再替换')
+                if existing.get('source')!=source:p.error('同名 Skill 不是本平台安装，未替换')
+                backup=args.backup_directory/args.bot/name/datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
+                backup.mkdir(parents=True,mode=0o700)
+                (backup/'SKILL.md').write_text(previous);(backup/'SKILL.md').chmod(0o600)
+                (backup/'metadata.json').write_text(json.dumps(existing,ensure_ascii=False,indent=2));(backup/'metadata.json').chmod(0o600)
+                old={'name':name,'description':existing.get('description',''),'source':source,'text':previous,'enabled':existing['enabled']}
+                api('DELETE',path)
+            try:
+                api('POST',f'/api/bots/{args.bot}/skill-template',{'name':name,'description':'','source':source,'text':text,'enabled':True})
+            except Exception:
+                if old:api('POST',f'/api/bots/{args.bot}/skill-template',old)
+                raise
+        saved=api('GET',path)['text']
         if saved!=text:raise RuntimeError('Skill 内容与仓库不一致')
         listing=api('GET',f'/api/bots/{args.bot}/skills')['skills']
         if not any(s['name']==name and s['enabled'] for s in listing):raise RuntimeError('Skill 未启用')
