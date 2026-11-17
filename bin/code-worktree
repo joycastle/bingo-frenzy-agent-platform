@@ -1,0 +1,8 @@
+#!/bin/bash
+. "$(dirname "$0")/common.sh"
+if [[ ! -f "$STATE_DIR/.env" ]]; then echo '缺少 Agent 环境文件。' >&2; exit 1; fi
+set -a
+. "$STATE_DIR/.env"
+set +a
+export BFA_GITHUB_COMMAND="$BFA_ROOT/bin/agent-github"
+exec python3 "$BFA_ROOT/bin/code_worktree.py" "$@"

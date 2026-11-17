@@ -1,0 +1,29 @@
+#!/bin/bash
+. "$(dirname "$0")/common.sh"
+if [[ ! -f "$STATE_DIR/.env" ]]; then
+  echo '缺少 Agent 环境文件。' >&2
+  exit 1
+fi
+set -a
+. "$STATE_DIR/.env"
+set +a
+if [[ -z "${GH_TOKEN:-${GIT_TOKEN:-}}" ]]; then
+  echo '请在 Agent 环境文件配置 GIT_TOKEN 或 GH_TOKEN。' >&2
+  exit 1
+fi
+export GH_TOKEN="${GH_TOKEN:-$GIT_TOKEN}"
+export GIT_TERMINAL_PROMPT=0
+gh_bin=$(command -v gh) || { echo '请先安装 GitHub CLI。' >&2; exit 1; }
+case "${1:-}" in
+  gh)
+    shift
+    exec "$gh_bin" "$@"
+    ;;
+  git)
+    shift
+    printf -v helper '!%q auth git-credential' "$gh_bin"
+    exec git -c credential.helper= -c credential.https://github.com.helper= \
+      -c "credential.https://github.com.helper=$helper" "$@"
+    ;;
+  *) echo 'usage: bin/agent-github git <args...> | gh <args...>' >&2; exit 2 ;;
+esac

@@ -3,6 +3,11 @@
 cd "$CURRENT"
 case "${1:-}" in
   server)
+    if [[ -e "$STATE_DIR/.env" ]]; then
+      set -a
+      . "$STATE_DIR/.env"
+      set +a
+    fi
     export OMB_DUCKDB_DIR="$CURRENT/dist-native/duckdb/$TARGET"
     exec node dist-server/openmausbot.js serve --port "$OMB_PORT" --data-dir "$OMB_DATA_DIR" --no-pair
     ;;

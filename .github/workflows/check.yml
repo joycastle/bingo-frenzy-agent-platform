@@ -11,5 +11,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check scripts and service configuration
         run: |
-          bash -n bin/common.sh bin/install.sh bin/run-service.sh bin/mausctl
+          bash -n bin/common.sh bin/install.sh bin/run-service.sh bin/mausctl bin/agent-github bin/code-worktree
           python3 -m unittest discover -s tests -v
