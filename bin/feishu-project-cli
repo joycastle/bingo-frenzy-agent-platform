@@ -1,0 +1,19 @@
+#!/bin/bash
+. "$(dirname "$0")/common.sh"
+if [[ ! -f "$STATE_DIR/.env" ]]; then
+  echo '缺少 Agent 环境文件。' >&2
+  exit 1
+fi
+set -a
+. "$STATE_DIR/.env"
+set +a
+if [[ -z "${FEISHU_PROJECT_MCP_USER_TOKEN:-}" ]]; then
+  echo '请配置 FEISHU_PROJECT_MCP_USER_TOKEN。' >&2
+  exit 1
+fi
+export MEEGLE_HOST=project.feishu.cn
+export MEEGLE_USER_ACCESS_TOKEN="$FEISHU_PROJECT_MCP_USER_TOKEN"
+export MEEGLE_ACCESS_TOKEN_HEADER=X-Mcp-Token
+export MEEGLE_TELEMETRY=disabled
+export MEEGLE_NO_UPDATE_CHECK=1
+exec npx -y "@lark-project/meegle@$FEISHU_PROJECT_CLI_VERSION" "$@"

@@ -1,5 +1,15 @@
 # 部署验证记录
 
+2026-11-17，试用官方 Meegle CLI 1.0.28，新增可复用的命令入口，正式 Bot 继续使用原 MCP。
+
+- `bin/feishu-project-cli` 复用统一 `.env` 的现有 Token，以 `X-Mcp-Token` 请求头认证，固定国内站和包版本，不新增凭据，不修改 MCP 配置或 Bot Skill。
+- 本地和部署机各 39 项测试通过；覆盖新增入口的 Token 映射、请求头、固定版本、参数原样传递和缺失配置拒绝。已有 MCP、工作树、服务配置及 Skill 安装回归全部执行，Shell 语法与 diff 检查通过，CI 脚本同步加入新入口。
+- 部署机真实 CLI 验收：认证通过、读取指定 Bug 的 `_all` 字段通过、评论读取通过。默认分页与每页 10 项自动分页返回的 28 项字段内容完全一致，最终 `has_more=false`。接口 `total=53` 不等于返回字段条数；首次临时核对错误地要求两者相等而失败，后续改以两种分页结果的实际字段键和值一致性验证，未修改产品实现或放宽已有测试断言。
+- 附件 `+download` 实测失败，仍返回 `SERVER_CALL_FAILED / MCPPersonalPreferenceDisabled`；没有生成下载文件。该问题按用户要求暂不继续处理。
+- CLI 试用未执行写操作、OAuth 登录或权限扩展；未执行 Bot 调用 CLI 的模型 E2E、上游完整测试或服务重启。私有调用结果及测试日志保留在部署机 `operations/feishu-project/meegle-trial/`，不入 Git。
+
+---
+
 2026-11-17，接入个人账号的飞书项目官方只读 MCP，绑定代码分析 Bot，并增加 Bug 单阅读流程。
 
 - `FEISHU_PROJECT_MCP_USER_TOKEN` 仅写部署机统一私有 `.env`，权限 0600；启动器映射为官方 `MCP_USER_TOKEN`。`versions.env` 固定官方包 0.0.1，仓库维护空值模板、单 Bot 配置模板、停服配置脚本和换机说明，不含真实凭据或项目数据。

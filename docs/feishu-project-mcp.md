@@ -11,6 +11,24 @@
 
 该统一文件是共享凭据来源，单 Bot MCP 绑定控制工具挂载，不是操作系统级秘密隔离。项目 MCP 不等于飞书云文档读写能力。
 
+## Meegle CLI 试用入口
+
+除正式 Bot 使用的 MCP 外，提供 `bin/feishu-project-cli`，版本由 `versions.env` 的 `FEISHU_PROJECT_CLI_VERSION` 固定。启动器复用统一 `.env` 的 `FEISHU_PROJECT_MCP_USER_TOKEN`，映射到 `MEEGLE_USER_ACCESS_TOKEN`，指定 `MEEGLE_HOST=project.feishu.cn` 和 `MEEGLE_ACCESS_TOKEN_HEADER=X-Mcp-Token`。不需要新增密钥或 OAuth 登录，也不把真实 Token 写入参数或 CLI 配置文件。
+
+```bash
+# 在平台仓库目录执行；首次运行由 npx 下载固定版本，需要 npm 网络。
+bash bin/feishu-project-cli --version
+bash bin/feishu-project-cli auth status --format json
+bash bin/feishu-project-cli workitem get \
+  --project-key <空间key或简称> --work-item-id <工作项ID> \
+  --fields _all --auto-paginate --envelope
+bash bin/feishu-project-cli comment list \
+  --project-key <空间key> --work-item-id <工作项ID> \
+  --auto-paginate --envelope
+```
+
+该入口固定关闭 CLI 的失败诊断上报与自动升级提示；手动更新版本后重新验收。传入环境 Token 的模式不会自动刷新凭据，失效时更新统一 `.env`。2026-11-17 在部署机实测 1.0.28：认证、工作项全部字段和评论读取通过；`attachment +download` 仍被相同的 `MCPPersonalPreferenceDisabled` 拒绝，没有生成附件文件。此试用入口没有替换正式 Bot 的 MCP 或修改 Skill；不代表已经完成 Bot 调用 CLI 的端到端接入。官方参考：[认证和配置](https://github.com/larksuite/meegle-cli#authentication)、[附件下载](https://github.com/larksuite/meegle-cli#attachments)。
+
 ## 换机器接入
 
 先按仓库 README 部署 MausBot、创建目标 Bot，再单独安全迁移统一环境文件，或在新机器重新填写 Token。新 Bot ID 和路径以新机器为准。以下命令在本仓目录运行；默认数据目录 `~/.openmausbot`、服务端口 8799，改过时传 `--data-dir` / `--port`。
