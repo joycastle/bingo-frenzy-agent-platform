@@ -2,7 +2,7 @@
 
 MausBot 的部署与接入仓库。MausBot 源码不放在本仓；安装时从上游拉取 `versions.env` 固定的提交，在目标机器上构建前端和服务端。
 
-当前提供 macOS 原生部署：专用 Node/pnpm 运行环境、Caddy 入口、launchd 常驻服务、健康检查、隔离对话验证及停服备份；另提供按 Bot 分组的代码阅读 Skill、GitHub 凭据入口和分支工作树管理。业务知识资料单独放在部署机器私有目录，MCP 和飞书入口暂未接入。
+当前提供 macOS 原生部署：专用 Node/pnpm 运行环境、Caddy 入口、launchd 常驻服务、健康检查、隔离对话验证及停服备份；另提供按 Bot 分组的代码与 Bug 单阅读 Skill、GitHub 凭据入口、分支工作树管理和飞书项目只读 MCP。业务知识资料单独放在部署机器私有目录，飞书群聊入口与云文档工具尚未接入。
 
 当前固定上游版本为 **0.1.161**；已执行的部署与升级检查见 [部署验证记录](docs/deployment-validation.md)。
 
@@ -49,6 +49,8 @@ bash bin/mausctl backup
 GitHub 接入使用 `bin/agent-github`：每次从统一文件读取，`GH_TOKEN` 非空时优先，否则使用 `GIT_TOKEN`，通过 GitHub CLI 的 credential helper 处理 Git HTTPS，不把 token 写进 remote URL、Git 配置或命令参数。不会继承个人 Git credential helper 兜底。`GIT_USERNAME` 兼容字段暂不参与 GitHub CLI 认证；`GIT_SSH_KEY_FILE` 和 `GIT_KNOWN_HOSTS_FILE` 目前未接入，保持空值。其它机器的 `.env` 不会自动同步。
 
 ## 按 Bot 维护 Skill
+
+飞书项目 MCP 的个人只读授权、统一环境变量、单 Bot 绑定和换机命令见 [接入说明](docs/feishu-project-mcp.md)。真实 Token 不入 Git。
 
 ```text
 bots/
@@ -109,7 +111,7 @@ Linux 可使用上游根目录 Dockerfile 从源码构建及部署；本仓当�
 
 ```bash
 python3 -m unittest discover -s tests -v
-bash -n bin/common.sh bin/install.sh bin/run-service.sh bin/mausctl bin/agent-github bin/code-worktree
+bash -n bin/common.sh bin/install.sh bin/run-service.sh bin/mausctl bin/agent-github bin/code-worktree bin/feishu-project-mcp
 ```
 
 安装过程额外执行上游 `scripts/smoke-packaged-server.mjs` 及 `bin/verify.py`。后者使用上游隔离 fixture，验证 doctor、创建机器人、发送、等待和预期回复，记录在状态目录的 `logs/verification.json`；不触碰正式对话。真实模型认证与浏览器页面需在部署时单独验收。

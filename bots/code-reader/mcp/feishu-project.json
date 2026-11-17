@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "feishu-project": {
+      "command": "/bin/bash",
+      "args": ["/Users/jc/Work/bingo-frenzy-agent-platform/bin/feishu-project-mcp"],
+      "env": {},
+      "enabled": false,
+      "bot": "REPLACE-WITH-TARGET-BOT-ID"
+    }
+  }
+}
